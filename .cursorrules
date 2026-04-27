@@ -1,0 +1,180 @@
+# Cursor Rules for Viral Python Project
+
+## Project Architecture
+
+This project follows a structured architecture with clear separation of concerns:
+
+- **Core orchestrator**: `src/core/` (orchestrator.py, logger.py, config.py)
+- **Agent K router**: `src/agents/agent_k/`
+- **Crew AI agents**: `src/agents/crew/` (content_creator.py, social_manager.py, analytics_agent.py)
+- **Super AGI agent**: `src/agents/super_agi/` (super_agi.py)
+- **Swarm AI agents**: `src/agents/swarm/` (swarm_node.py, consensus_manager.py)
+- **Backend/API modules**: `src/backend/`
+- **Frontend**: `src/frontend/`
+- **Data**: `data/`
+- **Logs**: `logs/`
+- **Scripts**: `scripts/`
+
+## File Organization Rules
+
+1. **Respect folder structure**: Always place new files in the appropriate directory based on their purpose:
+   - Core orchestration logic → `src/core/`
+   - Agent implementations → `src/agents/{agent_type}/`
+   - Backend/API code → `src/backend/`
+   - Frontend code → `src/frontend/`
+   - Data files → `data/`
+   - Log files → `logs/`
+   - Utility scripts → `scripts/`
+
+2. **Agent placement**: When creating new agents, automatically place them in the correct subfolder:
+   - Crew AI agents → `src/agents/crew/`
+   - Swarm AI agents → `src/agents/swarm/`
+   - Super AGI agents → `src/agents/super_agi/`
+   - Agent K router components → `src/agents/agent_k/`
+
+3. **Orchestration logic**: All orchestration logic MUST be placed in `src/core/orchestrator.py`. Do not create separate orchestrator files in other directories.
+
+## Python Code Standards
+
+### File Headers
+All new Python files MUST include a standard header with:
+- Author information
+- Date (use current date when creating)
+- Project name: "Viral"
+- Brief description of the file's purpose
+
+Example header format:
+```python
+"""
+Viral - [Module/Component Name]
+Author: [Author Name]
+Date: [YYYY-MM-DD]
+Description: [Brief description]
+"""
+```
+
+### Naming Conventions
+- **Classes**: Use `PascalCase` (e.g., `ContentCreator`, `SocialManager`, `AnalyticsAgent`)
+- **Functions**: Use `snake_case` (e.g., `create_content`, `manage_social_media`, `analyze_data`)
+- **Constants**: Use `UPPER_SNAKE_CASE` (e.g., `MAX_RETRIES`, `DEFAULT_TIMEOUT`)
+- **Private methods/attributes**: Prefix with single underscore `_` (e.g., `_internal_method`, `_private_var`)
+
+### Documentation
+- **All classes** MUST include docstrings describing their purpose, attributes, and usage
+- **All functions** MUST include docstrings with:
+  - Description of what the function does
+  - Args: Parameter descriptions
+  - Returns: Return value description
+  - Raises: Exceptions that may be raised (if applicable)
+
+Example:
+```python
+class ContentCreator:
+    """
+    Crew AI agent responsible for content creation.
+    
+    Attributes:
+        config: Configuration object for the agent
+        logger: Logger instance for logging operations
+    """
+    
+    async def create_content(self, topic: str, style: str) -> Dict[str, Any]:
+        """
+        Creates content based on the given topic and style.
+        
+        Args:
+            topic: The topic for content creation
+            style: The style/format of the content
+            
+        Returns:
+            Dictionary containing the created content and metadata
+            
+        Raises:
+            ValueError: If topic or style is invalid
+        """
+        pass
+```
+
+## Import Conventions
+
+Use consistent imports based on the project structure:
+
+```python
+# Core imports
+from src.core.orchestrator import Orchestrator
+from src.core.logger import setup_logger
+from src.core.config import Config
+
+# Agent imports
+from src.agents.crew.content_creator import ContentCreator
+from src.agents.crew.social_manager import SocialManager
+from src.agents.crew.analytics_agent import AnalyticsAgent
+from src.agents.super_agi.super_agi import SuperAGI
+from src.agents.swarm.swarm_node import SwarmNode
+from src.agents.swarm.consensus_manager import ConsensusManager
+from src.agents.agent_k.router import AgentKRouter
+
+# Backend imports
+from src.backend.api import APIServer
+```
+
+Always use absolute imports from the project root (`src/`) rather than relative imports when possible.
+
+## Async/Await Patterns
+
+- **Prefer async/await** for all agent communication and inter-agent operations
+- Use `asyncio` for concurrent operations
+- Agent methods that involve communication should be async
+- Use `asyncio.gather()` or `asyncio.create_task()` for parallel operations
+
+Example:
+```python
+async def coordinate_agents(self):
+    """Coordinate multiple agents concurrently."""
+    tasks = [
+        self.content_creator.create_content(...),
+        self.social_manager.post_content(...),
+        self.analytics_agent.analyze(...)
+    ]
+    results = await asyncio.gather(*tasks)
+    return results
+```
+
+## File Management
+
+- **NEVER create** `.pyc` files or temporary files
+- Ensure `.gitignore` includes `__pycache__/`, `*.pyc`, `*.pyo`, `*.pyd`
+- Use proper `__init__.py` files in each package directory
+- Keep data files in `data/` directory, not in source code directories
+- Keep log files in `logs/` directory
+
+## Code Quality
+
+- Follow PEP 8 style guidelines
+- Use type hints for function parameters and return values
+- Handle exceptions appropriately with try/except blocks
+- Use logging instead of print statements (import from `src.core.logger`)
+- Keep functions focused and single-purpose
+- Avoid circular imports
+
+## Module Structure
+
+When creating new modules:
+1. Create `__init__.py` in the directory
+2. Export main classes/functions in `__init__.py` if appropriate
+3. Keep related functionality together
+4. Separate concerns clearly (e.g., don't mix API logic with agent logic)
+
+## Testing Considerations
+
+- Place test files in corresponding test directories
+- Use descriptive test names that explain what is being tested
+- Follow the same import structure for tests
+
+## Additional Guidelines
+
+- When in doubt about file placement, ask or follow the existing pattern
+- Maintain consistency with existing code style
+- Update related files when adding new features (e.g., update orchestrator when adding new agents)
+- Keep configuration in `src/core/config.py` or environment variables
+- Use environment variables for sensitive data (API keys, tokens, etc.)

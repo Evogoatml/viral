@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suite Management Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .header .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .status.healthy {
+            background: #10b981;
+            color: white;
+        }
+        
+        .status.unhealthy {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .service {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ccc;
+        }
+        
+        .service.running {
+            background: #f0fdf4;
+            border-left-color: #10b981;
+        }
+        
+        .service.stopped {
+            background: #fef2f2;
+            border-left-color: #ef4444;
+        }
+        
+        .service.starting {
+            background: #fffbeb;
+            border-left-color: #f59e0b;
+        }
+        
+        .service-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .service-status {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .service-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .metric {
+            text-align: center;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .logs-container {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .log-line {
+            margin-bottom: 5px;
+            word-wrap: break-word;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Suite Management Dashboard</h1>
+            <div>
+                <span class="status" id="overall-status">Checking...</span>
+                <span style="margin-left: 20px; color: #666;" id="last-update"></span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-success" onclick="startAll()">▶ Start All</button>
+            <button class="btn btn-danger" onclick="stopAll()">⏹ Stop All</button>
+            <button class="btn btn-primary" onclick="refresh()">🔄 Refresh</button>
+        </div>
+        
+        <div class="grid">
+            <div class="card">
+                <h2>Services</h2>
+                <div id="services-list">
+                    <div class="loading"></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>System Metrics</h2>
+                <div class="metrics" id="metrics">
+                    <div class="loading"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Service Logs</h2>
+            <select id="log-service" onchange="loadLogs()" style="margin-bottom: 10px; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                <option value="">Select a service...</option>
+            </select>
+            <div class="logs-container" id="logs">
+                <div style="color: #888;">Select a service to view logs</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:8080';
+        let refreshInterval;
+        
+        async function fetchAPI(endpoint) {
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                return null;
+            }
+        }
+        
+        async function refresh() {
+            await Promise.all([
+                updateHealth(),
+                updateServices(),
+                updateMetrics()
+            ]);
+        }
+        
+        async function updateHealth() {
+            const health = await fetchAPI('/api/health');
+            if (!health) return;
+            
+            const statusEl = document.getElementById('overall-status');
+            statusEl.textContent = health.status.toUpperCase();
+            statusEl.className = `status ${health.status}`;
+            
+            document.getElementById('last-update').textContent = 
+                `Last updated: ${new Date().toLocaleTimeString()}`;
+        }
+        
+        async function updateServices() {
+            const services = await fetchAPI('/api/services');
+            if (!services) return;
+            
+            const listEl = document.getElementById('services-list');
+            listEl.innerHTML = '';
+            
+            const logSelect = document.getElementById('log-service');
+            logSelect.innerHTML = '<option value="">Select a service...</option>';
+            
+            for (const [name, service] of Object.entries(services)) {
+                // Service card
+                const serviceEl = document.createElement('div');
+                serviceEl.className = `service ${service.status}`;
+                serviceEl.innerHTML = `
+                    <div class="service-name">${name}</div>
+                    <div class="service-status">
+                        Status: ${service.status} ${service.pid ? `(PID: ${service.pid})` : ''}
+                        ${service.port ? `| Port: ${service.port}` : ''}
+                    </div>
+                    <div class="service-actions">
+                        ${service.status !== 'running' ? 
+                            `<button class="btn btn-success" onclick="startService('${name}')">Start</button>` : 
+                            `<button class="btn btn-danger" onclick="stopService('${name}')">Stop</button>`
+                        }
+                        <button class="btn btn-primary" onclick="restartService('${name}')">Restart</button>
+                    </div>
+                `;
+                listEl.appendChild(serviceEl);
+                
+                // Log selector option
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                logSelect.appendChild(option);
+            }
+        }
+        
+        async function updateMetrics() {
+            const metrics = await fetchAPI('/api/metrics');
+            if (!metrics) return;
+            
+            const metricsEl = document.getElementById('metrics');
+            metricsEl.innerHTML = `
+                <div class="metric">
+                    <div class="metric-value">${metrics.cpu_usage?.toFixed(1) || 'N/A'}%</div>
+                    <div class="metric-label">CPU Usage</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">${metrics.memory_usage?.toFixed(1) || 'N/A'}%</div>
+                    <div class="metric-label">Memory Usage</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">${metrics.disk_usage?.toFixed(1) || 'N/A'}%</div>
+                    <div class="metric-label">Disk Usage</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">${metrics.active_services}/${metrics.total_services}</div>
+                    <div class="metric-label">Active Services</div>
+                </div>
+            `;
+        }
+        
+        async function startAll() {
+            await fetchAPI('/api/services/start', { method: 'POST' });
+            setTimeout(refresh, 2000);
+        }
+        
+        async function stopAll() {
+            await fetchAPI('/api/services/stop', { method: 'POST' });
+            setTimeout(refresh, 2000);
+        }
+        
+        async function startService(name) {
+            await fetchAPI('/api/services/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ services: [name] })
+            });
+            setTimeout(refresh, 2000);
+        }
+        
+        async function stopService(name) {
+            await fetchAPI('/api/services/stop', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ services: [name] })
+            });
+            setTimeout(refresh, 2000);
+        }
+        
+        async function restartService(name) {
+            await fetchAPI(`/api/services/${name}/restart`, { method: 'POST' });
+            setTimeout(refresh, 2000);
+        }
+        
+        async function loadLogs() {
+            const service = document.getElementById('log-service').value;
+            if (!service) {
+                document.getElementById('logs').innerHTML = 
+                    '<div style="color: #888;">Select a service to view logs</div>';
+                return;
+            }
+            
+            const logs = await fetchAPI(`/api/logs/${service}?lines=100`);
+            if (!logs) {
+                document.getElementById('logs').innerHTML = 
+                    '<div style="color: #ef4444;">Error loading logs</div>';
+                return;
+            }
+            
+            const logsEl = document.getElementById('logs');
+            if (logs.logs.length === 0) {
+                logsEl.innerHTML = '<div style="color: #888;">No logs available</div>';
+                return;
+            }
+            
+            logsEl.innerHTML = logs.logs.map(line => 
+                `<div class="log-line">${escapeHtml(line)}</div>`
+            ).join('');
+            logsEl.scrollTop = logsEl.scrollHeight;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Initial load
+        refresh();
+        
+        // Auto-refresh every 5 seconds
+        refreshInterval = setInterval(refresh, 5000);
+    </script>
+</body>
+</html>

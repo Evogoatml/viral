@@ -1,0 +1,16 @@
+# Additional requirements for Management API
+# Install with: pip install -r requirements_management.txt
+
+# Web framework (if not already in main requirements.txt)
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# System monitoring
+psutil>=5.9.0
+
+# HTTP client for webhooks
+aiohttp>=3.9.0
+
+# Already in main requirements.txt, but listed for clarity:
+# pydantic>=2.5.0
+# python-dotenv>=1.0.0
